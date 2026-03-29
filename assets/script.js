@@ -17,20 +17,17 @@ const form = document.getElementById("appForm");
 
 if (form) {
   form.addEventListener("submit", function (e) {
-    e.preventDefault();
-
     if (!form.checkValidity()) {
+      e.preventDefault();
       form.reportValidity();
       return;
     }
 
     const btn = this.querySelector(".btn-sub");
-    btn.textContent = "Application Submitted ✓";
-    btn.style.background = getComputedStyle(document.documentElement)
-      .getPropertyValue("--success")
-      .trim();
-    btn.style.cursor = "default";
-    btn.disabled = true;
+    if (btn) {
+      btn.textContent = "Submitting...";
+      btn.disabled = true;
+    }
   });
 }
 
