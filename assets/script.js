@@ -1,59 +1,109 @@
-function toggleSection(head) {
-  const sec = head.closest(".fsec");
-  const isOpen = sec.classList.toggle("open");
-  head.setAttribute("aria-expanded", isOpen ? "true" : "false");
+function toggleSection(header) {
+  if (!header) return;
+
+  const section = header.closest(".fsec");
+  if (!section) return;
+
+  const isOpen = section.classList.toggle("open");
+  header.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+  const body = section.querySelector(".fsec-b");
+  if (body) {
+    body.hidden = !isOpen;
+  }
 }
 
-document.querySelectorAll(".fsec-h").forEach((head) => {
-  head.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggleSection(head);
-    }
-  });
-});
+function setupAccordionAccessibility() {
+  const headers = document.querySelectorAll(".fsec-h");
 
-const form = document.getElementById("appForm");
+  headers.forEach((header, index) => {
+    const section = header.closest(".fsec");
+    const body = section ? section.querySelector(".fsec-b") : null;
 
-if (form) {
-  form.addEventListener("submit", function (e) {
-    if (!form.checkValidity()) {
-      e.preventDefault();
-      form.reportValidity();
-      return;
+    if (!section || !body) return;
+
+    if (!body.id) {
+      body.id = `fsec-body-${index + 1}`;
     }
 
-    const btn = this.querySelector(".btn-sub");
-    if (btn) {
-      btn.textContent = "Submitting...";
-      btn.disabled = true;
-    }
-  });
-}
+    header.setAttribute("role", "button");
+    header.setAttribute("tabindex", "0");
+    header.setAttribute("aria-controls", body.id);
 
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((en) => {
-      if (en.isIntersecting) en.target.classList.add("vis");
+    const isOpen = section.classList.contains("open");
+    header.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    body.hidden = !isOpen;
+
+    header.addEventListener("click", () => {
+      toggleSection(header);
     });
-  },
-  { threshold: 0.06 }
-);
 
-document.querySelectorAll(".tr, .oc, .pr").forEach((el, i) => {
-  el.style.transitionDelay = (i % 4) * 80 + "ms";
-  observer.observe(el);
-});
-
-document.querySelectorAll('a[href^="#"]').forEach((a) => {
-  a.addEventListener("click", (e) => {
-    const href = a.getAttribute("href");
-    if (!href || href === "#") return;
-
-    const target = document.querySelector(href);
-    if (target) {
-      e.preventDefault();
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    header.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleSection(header);
+      }
+    });
   });
+}
+
+function setupRevealAnimations() {
+  const animatedItems = document.querySelectorAll(".tr, .oc, .pr");
+
+  if (!animatedItems.length) return;
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (prefersReducedMotion) {
+    animatedItems.forEach((item) => item.classList.add("vis"));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries, obs) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("vis");
+        obs.unobserve(entry.target);
+      });
+    },
+    {
+      threshold: 0.12,
+      rootMargin: "0px 0px -40px 0px",
+    }
+  );
+
+  animatedItems.forEach((item) => observer.observe(item));
+}
+
+function setupSmoothAnchorOffset() {
+  const anchorLinks = document.querySelectorAll('a[href^="#"]');
+
+  anchorLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const href = link.getAttribute("href");
+      if (!href || href === "#") return;
+
+      const target = document.querySelector(href);
+      if (!target) return;
+
+      event.preventDefault();
+
+      const nav = document.querySelector(".wn");
+      const navHeight = nav ? nav.offsetHeight : 0;
+      const extraOffset = 18;
+      const top = target.getBoundingClientRect().top + window.scrollY - navHeight - extraOffset;
+
+      window.scrollTo({
+        top,
+        behavior: "smooth",
+      });
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setupAccordionAccessibility();
+  setupRevealAnimations();
+  setupSmoothAnchorOffset();
 });
