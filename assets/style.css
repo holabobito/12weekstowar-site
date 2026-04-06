@@ -963,6 +963,10 @@ section {
   padding: 28px 28px 36px;
 }
 
+.fsec.open .fsec-b {
+  display: block !important;
+}
+
 .fsec-b[hidden] {
   display: none !important;
 }
