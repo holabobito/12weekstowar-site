@@ -4,13 +4,12 @@ function toggleSection(header) {
   const section = header.closest(".fsec");
   if (!section) return;
 
+  const body = section.querySelector(".fsec-b");
+  if (!body) return;
+
   const isOpen = section.classList.toggle("open");
   header.setAttribute("aria-expanded", isOpen ? "true" : "false");
-
-  const body = section.querySelector(".fsec-b");
-  if (body) {
-    body.hidden = !isOpen;
-  }
+  body.hidden = !isOpen;
 }
 
 function setupAccordionAccessibility() {
